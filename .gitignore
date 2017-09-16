@@ -1,0 +1,9 @@
+node_modules
+bundle.js
+bundle.js.map
+npm-debug.log
+coverage
+mongoMockData.js
+.DS_Store
+.env
+scripts/dump
