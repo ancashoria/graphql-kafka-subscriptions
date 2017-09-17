@@ -1,5 +1,8 @@
 # graphql-kafka-subscriptions
 
+## Installation
+`npm install graphql-kafka-subscriptions`
+
 ## Usage
 ```
 import { KafkaPubSub } from 'graphql-kafka-subscriptions'
@@ -11,4 +14,3 @@ export const pubsub = new KafkaPubSub({
 })
 ```
 
-WIP
