@@ -8,7 +8,7 @@ One producer and one consumer for each node instance. Communication happens over
 `npm install graphql-kafka-subscriptions`
 
 ## Usage
-```
+```javascript
 import { KafkaPubSub } from 'graphql-kafka-subscriptions'
 
 export const pubsub = new KafkaPubSub({
