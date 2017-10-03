@@ -25,6 +25,7 @@
   },
   "homepage": "https://github.com/ancashoria/graphql-kafka-subscriptions#readme",
   "dependencies": {
+    "bunyan": "1.8.12",
     "graphql-subscriptions": "^0.5.0",
     "iterall": "^1.1.1",
     "node-rdkafka": "^2.0.0"
