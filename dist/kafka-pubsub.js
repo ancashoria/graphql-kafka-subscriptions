@@ -20,17 +20,16 @@ var defaultLogger = Logger.createLogger({
 });
 var KafkaPubSub = (function () {
     function KafkaPubSub(options) {
-        var _this = this;
         this.options = options;
         this.subscriptionMap = {};
         this.channelSubscriptions = {};
-        this.producer = this.createProducer(this.options.topic);
-        this.consumer = this.createConsumer(this.options.topic);
+        this.producer = this.options.createProducer
+            ? this.options.createProducer(this.options.topic)
+            : this.createProducer(this.options.topic);
+        this.consumer = this.options.createConsumer
+            ? this.options.createConsumer(this.options.topic)
+            : this.createConsumer(this.options.topic);
         this.logger = child_logger_1.createChildLogger(this.options.logger || defaultLogger, 'KafkaPubSub');
-        this.consumer.on('data', function (message) {
-            _this.logger.info('Got message');
-            _this.onMessage(JSON.parse(message.value.toString()));
-        });
     }
     KafkaPubSub.prototype.publish = function (payload) {
         return this.producer.write(new Buffer(JSON.stringify(payload)));
@@ -73,12 +72,17 @@ var KafkaPubSub = (function () {
         return producer;
     };
     KafkaPubSub.prototype.createConsumer = function (topic) {
+        var _this = this;
         var randomGroupId = Math.ceil(Math.random() * 9999);
         var consumer = Kafka.KafkaConsumer.createReadStream({
             'group.id': "kafka-group-" + randomGroupId,
             'metadata.broker.list': this.options.host + ":" + this.options.port,
         }, {}, {
             topics: [topic]
+        });
+        consumer.on('data', function (message) {
+            console.log('Got message');
+            _this.onMessage(JSON.parse(message.value.toString()));
         });
         return consumer;
     };

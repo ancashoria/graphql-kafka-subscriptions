@@ -5,15 +5,21 @@ import { createChildLogger } from './child-logger';
 import { PubSubAsyncIterator } from './pubsub-async-iterator'
 
 export interface IKafkaOptions {
-  topic: string,
-  host: string,
-  port: string,
+  topic: string
+  host: string
+  port: string
+  createProducer?: () => IKafkaProducer
+  createConsumer?: () => any
   logger?: Logger,
 }
 
+export interface IKafkaProducer {
+  write: (input: Buffer) => any
+}
+
 export interface IKafkaTopic {
-  readStream: any,
-  writeStream: any,
+  readStream: any
+  writeStream: any
 }
 
 const defaultLogger = Logger.createLogger({
@@ -34,22 +40,21 @@ export class KafkaPubSub implements PubSubEngine {
     this.options = options
     this.subscriptionMap = {}
     this.channelSubscriptions = {}
-    this.producer = this.createProducer(this.options.topic)
-    this.consumer = this.createConsumer(this.options.topic)
+    this.producer = this.options.createProducer
+      ? this.options.createProducer(this.options.topic)
+      : this.createProducer(this.options.topic)
+    this.consumer = this.options.createConsumer
+      ? this.options.createConsumer(this.options.topic)
+      : this.createConsumer(this.options.topic)
     this.logger = createChildLogger(
       this.options.logger || defaultLogger, 'KafkaPubSub')
-
-    this.consumer.on('data', (message) => {
-      this.logger.info('Got message')
-      this.onMessage(JSON.parse(message.value.toString()))
-    });
   }
 
   public publish(payload) {
     return this.producer.write(new Buffer(JSON.stringify(payload)))
   }
 
-  public subscribe(channel: string, onMessage: Function, options: Object): Promise<number> {
+  public subscribe(channel: string, onMessage: Function, options?: Object): Promise<number> {
     const index = Object.keys(this.subscriptionMap).length
     this.subscriptionMap[index] = [channel, onMessage]
     this.channelSubscriptions[channel] = [
@@ -64,10 +69,10 @@ export class KafkaPubSub implements PubSubEngine {
   }
 
   public asyncIterator<T>(triggers: string | string[]): AsyncIterator<T> {
-    return new PubSubAsyncIterator<T>(this, triggers);
+    return new PubSubAsyncIterator<T>(this, triggers)
   }
 
-  private onMessage({channel, ...message}) {
+  private onMessage({ channel, ...message }) {
     const subscriptions = this.channelSubscriptions[channel]
     if (!subscriptions) { return } // no subscribers, don't publish msg
     for (const subId of subscriptions) {
@@ -79,7 +84,7 @@ export class KafkaPubSub implements PubSubEngine {
   private createProducer(topic: string) {
     const producer = Kafka.Producer.createWriteStream({
       'metadata.broker.list': `${this.options.host}:${this.options.port}`
-    }, {}, {topic})
+    }, {}, { topic })
     producer.on('error', (err) => {
       this.logger.error(err, 'Error in our kafka stream')
     })
@@ -93,8 +98,12 @@ export class KafkaPubSub implements PubSubEngine {
       'group.id': `kafka-group-${randomGroupId}`,
       'metadata.broker.list': `${this.options.host}:${this.options.port}`,
     }, {}, {
-      topics: [topic]
-    });
+        topics: [topic]
+      })
+    consumer.on('data', (message) => {
+      console.log('Got message')
+      this.onMessage(JSON.parse(message.value.toString()))
+    })
     return consumer
   }
 }

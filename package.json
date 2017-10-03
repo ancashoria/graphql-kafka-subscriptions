@@ -4,7 +4,7 @@
   "description": "Apollo graphql subscription over Kafka protocol",
   "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest --watchAll",
     "build": "tsc",
     "watch": "tsc -w"
   },
@@ -24,6 +24,20 @@
     "url": "https://github.com/ancashoria/graphql-kafka-subscriptions/issues"
   },
   "homepage": "https://github.com/ancashoria/graphql-kafka-subscriptions#readme",
+  "jest": {
+    "roots": [
+      "<rootDir>/src/test"
+    ],
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js"
+    ],
+    "transform": {
+      "\\.(ts|tsx)$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+    },
+    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(tsx?|jsx?)$"
+  },
   "dependencies": {
     "bunyan": "1.8.12",
     "graphql-subscriptions": "^0.5.0",
@@ -31,7 +45,10 @@
     "node-rdkafka": "^2.0.0"
   },
   "devDependencies": {
+    "@types/jest": "^21.1.1",
     "@types/node": "^8.0.28",
+    "jest": "^21.2.1",
+    "ts-jest": "^21.0.1",
     "typescript": "^2.5.2"
   }
 }
