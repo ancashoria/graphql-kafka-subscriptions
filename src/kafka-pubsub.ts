@@ -42,7 +42,7 @@ export class KafkaPubSub implements PubSubEngine {
     return this.producer.write(new Buffer(JSON.stringify(payload)))
   }
 
-  public subscribe(channel: string, onMessage: Function, options: Object): Promise<number> {
+  public subscribe(channel: string, onMessage: Function, options?: Object): Promise<number> {
     const index = Object.keys(this.subscriptionMap).length
     this.subscriptionMap[index] = [channel, onMessage]
     this.channelSubscriptions[channel] = [
