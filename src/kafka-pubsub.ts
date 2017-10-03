@@ -3,14 +3,20 @@ import { PubSubEngine } from 'graphql-subscriptions'
 import { PubSubAsyncIterator } from './pubsub-async-iterator'
 
 export interface IKafkaOptions {
-  topic: string,
-  host: string,
-  port: string,
+  topic: string
+  host: string
+  port: string
+  createProducer?: () => IKafkaProducer
+  createConsumer?: () => any
+}
+
+export interface IKafkaProducer {
+  write: (input: Buffer) => any
 }
 
 export interface IKafkaTopic {
-  readStream: any,
-  writeStream: any,
+  readStream: any
+  writeStream: any
 }
 
 export class KafkaPubSub implements PubSubEngine {
@@ -24,13 +30,12 @@ export class KafkaPubSub implements PubSubEngine {
     this.options = options
     this.subscriptionMap = {}
     this.channelSubscriptions = {}
-    this.producer = this.createProducer(this.options.topic)
-    this.consumer = this.createConsumer(this.options.topic)
-
-    this.consumer.on('data', (message) => {
-      console.log('Got message');
-      this.onMessage(JSON.parse(message.value.toString()))
-    });
+    this.producer = this.options.createProducer
+      ? this.options.createProducer(this.options.topic)
+      : this.createProducer(this.options.topic)
+    this.consumer = this.options.createConsumer
+      ? this.options.createConsumer(this.options.topic)
+      : this.createConsumer(this.options.topic)
   }
 
   public publish(payload) {
@@ -52,7 +57,7 @@ export class KafkaPubSub implements PubSubEngine {
   }
 
   public asyncIterator<T>(triggers: string | string[]): AsyncIterator<T> {
-    return new PubSubAsyncIterator<T>(this, triggers);
+    return new PubSubAsyncIterator<T>(this, triggers)
   }
 
   private onMessage({channel, ...message}) {
@@ -83,7 +88,11 @@ export class KafkaPubSub implements PubSubEngine {
       'metadata.broker.list': `${this.options.host}:${this.options.port}`,
     }, {}, {
       topics: [topic]
-    });
+    })
+    consumer.on('data', (message) => {
+      console.log('Got message')
+      this.onMessage(JSON.parse(message.value.toString()))
+    })
     return consumer
   }
 }
