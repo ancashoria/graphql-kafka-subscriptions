@@ -40,7 +40,7 @@ export class KafkaPubSub implements PubSubEngine {
       this.options.logger || defaultLogger, 'KafkaPubSub')
 
     this.consumer.on('data', (message) => {
-      this.logger.log('Got message')
+      this.logger.info('Got message')
       this.onMessage(JSON.parse(message.value.toString()))
     });
   }

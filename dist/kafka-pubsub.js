@@ -28,7 +28,7 @@ var KafkaPubSub = (function () {
         this.consumer = this.createConsumer(this.options.topic);
         this.logger = child_logger_1.createChildLogger(this.options.logger || defaultLogger, 'KafkaPubSub');
         this.consumer.on('data', function (message) {
-            _this.logger.log('Got message');
+            _this.logger.info('Got message');
             _this.onMessage(JSON.parse(message.value.toString()));
         });
     }
