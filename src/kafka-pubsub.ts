@@ -1,5 +1,7 @@
 import * as Kafka from 'node-rdkafka'
 import { PubSubEngine } from 'graphql-subscriptions'
+import * as Logger from 'bunyan';
+import { createChildLogger } from './child-logger';
 import { PubSubAsyncIterator } from './pubsub-async-iterator'
 
 export interface IKafkaOptions {
@@ -8,6 +10,7 @@ export interface IKafkaOptions {
   port: string
   createProducer?: () => IKafkaProducer
   createConsumer?: () => any
+  logger?: Logger,
 }
 
 export interface IKafkaProducer {
@@ -19,12 +22,19 @@ export interface IKafkaTopic {
   writeStream: any
 }
 
+const defaultLogger = Logger.createLogger({
+  name: 'pubsub',
+  stream: process.stdout,
+  level: 'info'
+})
+
 export class KafkaPubSub implements PubSubEngine {
   protected producer: any
   protected consumer: any
   protected options: any
   protected subscriptionMap: { [subId: number]: [string, Function] }
   protected channelSubscriptions: { [channel: string]: Array<number> }
+  protected logger: Logger
 
   constructor(options: IKafkaOptions) {
     this.options = options
@@ -36,6 +46,8 @@ export class KafkaPubSub implements PubSubEngine {
     this.consumer = this.options.createConsumer
       ? this.options.createConsumer(this.options.topic)
       : this.createConsumer(this.options.topic)
+    this.logger = createChildLogger(
+      this.options.logger || defaultLogger, 'KafkaPubSub')
   }
 
   public publish(payload) {
@@ -60,7 +72,7 @@ export class KafkaPubSub implements PubSubEngine {
     return new PubSubAsyncIterator<T>(this, triggers)
   }
 
-  private onMessage({channel, ...message}) {
+  private onMessage({ channel, ...message }) {
     const subscriptions = this.channelSubscriptions[channel]
     if (!subscriptions) { return } // no subscribers, don't publish msg
     for (const subId of subscriptions) {
@@ -72,10 +84,9 @@ export class KafkaPubSub implements PubSubEngine {
   private createProducer(topic: string) {
     const producer = Kafka.Producer.createWriteStream({
       'metadata.broker.list': `${this.options.host}:${this.options.port}`
-    }, {}, {topic})
+    }, {}, { topic })
     producer.on('error', (err) => {
-      console.error('Error in our kafka stream')
-      console.error(err)
+      this.logger.error(err, 'Error in our kafka stream')
     })
     return producer
   }
@@ -87,8 +98,8 @@ export class KafkaPubSub implements PubSubEngine {
       'group.id': `kafka-group-${randomGroupId}`,
       'metadata.broker.list': `${this.options.host}:${this.options.port}`,
     }, {}, {
-      topics: [topic]
-    })
+        topics: [topic]
+      })
     consumer.on('data', (message) => {
       console.log('Got message')
       this.onMessage(JSON.parse(message.value.toString()))

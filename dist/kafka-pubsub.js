@@ -10,7 +10,14 @@ var __rest = (this && this.__rest) || function (s, e) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var Kafka = require("node-rdkafka");
+var Logger = require("bunyan");
+var child_logger_1 = require("./child-logger");
 var pubsub_async_iterator_1 = require("./pubsub-async-iterator");
+var defaultLogger = Logger.createLogger({
+    name: 'pubsub',
+    stream: process.stdout,
+    level: 'info'
+});
 var KafkaPubSub = (function () {
     function KafkaPubSub(options) {
         this.options = options;
@@ -22,6 +29,7 @@ var KafkaPubSub = (function () {
         this.consumer = this.options.createConsumer
             ? this.options.createConsumer(this.options.topic)
             : this.createConsumer(this.options.topic);
+        this.logger = child_logger_1.createChildLogger(this.options.logger || defaultLogger, 'KafkaPubSub');
     }
     KafkaPubSub.prototype.publish = function (payload) {
         return this.producer.write(new Buffer(JSON.stringify(payload)));
@@ -54,12 +62,12 @@ var KafkaPubSub = (function () {
         }
     };
     KafkaPubSub.prototype.createProducer = function (topic) {
+        var _this = this;
         var producer = Kafka.Producer.createWriteStream({
             'metadata.broker.list': this.options.host + ":" + this.options.port
         }, {}, { topic: topic });
         producer.on('error', function (err) {
-            console.error('Error in our kafka stream');
-            console.error(err);
+            _this.logger.error(err, 'Error in our kafka stream');
         });
         return producer;
     };

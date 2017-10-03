@@ -39,6 +39,7 @@
     "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(tsx?|jsx?)$"
   },
   "dependencies": {
+    "bunyan": "1.8.12",
     "graphql-subscriptions": "^0.5.0",
     "iterall": "^1.1.1",
     "node-rdkafka": "^2.0.0"
