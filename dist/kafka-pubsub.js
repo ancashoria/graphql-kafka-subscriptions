@@ -23,15 +23,11 @@ var KafkaPubSub = (function () {
         this.options = options;
         this.subscriptionMap = {};
         this.channelSubscriptions = {};
-        this.producer = this.options.createProducer
-            ? this.options.createProducer(this.options.topic)
-            : this.createProducer(this.options.topic);
-        this.consumer = this.options.createConsumer
-            ? this.options.createConsumer(this.options.topic)
-            : this.createConsumer(this.options.topic);
+        this.consumer = this.createConsumer(this.options.topic);
         this.logger = child_logger_1.createChildLogger(this.options.logger || defaultLogger, 'KafkaPubSub');
     }
     KafkaPubSub.prototype.publish = function (payload) {
+        this.producer = this.producer || this.createProducer(this.options.topic);
         return this.producer.write(new Buffer(JSON.stringify(payload)));
     };
     KafkaPubSub.prototype.subscribe = function (channel, onMessage, options) {
@@ -49,15 +45,14 @@ var KafkaPubSub = (function () {
     KafkaPubSub.prototype.asyncIterator = function (triggers) {
         return new pubsub_async_iterator_1.PubSubAsyncIterator(this, triggers);
     };
-    KafkaPubSub.prototype.onMessage = function (_a) {
-        var channel = _a.channel, message = __rest(_a, ["channel"]);
+    KafkaPubSub.prototype.onMessage = function (channel, message) {
         var subscriptions = this.channelSubscriptions[channel];
         if (!subscriptions) {
             return;
         }
         for (var _i = 0, subscriptions_1 = subscriptions; _i < subscriptions_1.length; _i++) {
             var subId = subscriptions_1[_i];
-            var _b = this.subscriptionMap[subId], cnl = _b[0], listener = _b[1];
+            var _a = this.subscriptionMap[subId], cnl = _a[0], listener = _a[1];
             listener(message);
         }
     };
@@ -73,16 +68,22 @@ var KafkaPubSub = (function () {
     };
     KafkaPubSub.prototype.createConsumer = function (topic) {
         var _this = this;
-        var randomGroupId = Math.ceil(Math.random() * 9999);
+        var groupId = this.options.groupId || Math.ceil(Math.random() * 9999);
         var consumer = Kafka.KafkaConsumer.createReadStream({
-            'group.id': "kafka-group-" + randomGroupId,
+            'group.id': "kafka-group-" + groupId,
             'metadata.broker.list': this.options.host + ":" + this.options.port,
         }, {}, {
             topics: [topic]
         });
         consumer.on('data', function (message) {
-            console.log('Got message');
-            _this.onMessage(JSON.parse(message.value.toString()));
+            var parsedMessage = JSON.parse(message.value.toString());
+            if (parsedMessage.channel) {
+                var channel = parsedMessage.channel, payload = __rest(parsedMessage, ["channel"]);
+                _this.onMessage(parsedMessage.channel, payload);
+            }
+            else {
+                _this.onMessage(topic, parsedMessage);
+            }
         });
         return consumer;
     };

@@ -12,8 +12,6 @@ const pubsub = new KafkaPubSub({
   topic,
   host,
   port,
-  createProducer: mockProducer,
-  createConsumer: mockConsumer,
 })
 
 describe('KafkaPubSub', () => {

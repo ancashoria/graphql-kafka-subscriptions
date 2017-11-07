@@ -49,8 +49,6 @@ var pubsub = new index_1.KafkaPubSub({
     topic: topic,
     host: host,
     port: port,
-    createProducer: mockProducer,
-    createConsumer: mockConsumer,
 });
 describe('KafkaPubSub', function () {
     it('should create producer/consumers correctly', function () {

@@ -1,6 +1,6 @@
 {
   "name": "graphql-kafka-subscriptions",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "description": "Apollo graphql subscription over Kafka protocol",
   "main": "dist/index.js",
   "scripts": {
@@ -42,7 +42,7 @@
     "bunyan": "1.8.12",
     "graphql-subscriptions": "^0.5.0",
     "iterall": "^1.1.1",
-    "node-rdkafka": "^2.0.0"
+    "node-rdkafka": "^2.1.0"
   },
   "devDependencies": {
     "@types/jest": "^21.1.1",
