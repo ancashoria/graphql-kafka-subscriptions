@@ -3,6 +3,7 @@
   "version": "0.2.1",
   "description": "Apollo graphql subscription over Kafka protocol",
   "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
   "scripts": {
     "test": "jest --watchAll",
     "build": "tsc",
