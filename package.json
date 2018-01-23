@@ -13,17 +13,27 @@
     "type": "git",
     "url": "git+https://github.com/ancashoria/graphql-kafka-subscriptions.git"
   },
-  "keywords": ["graphql", "kafka", "apollo", "subscriptions"],
+  "keywords": [
+    "graphql",
+    "kafka",
+    "apollo",
+    "subscriptions"
+  ],
   "author": "Ancas Horia",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/ancashoria/graphql-kafka-subscriptions/issues"
   },
-  "homepage":
-    "https://github.com/ancashoria/graphql-kafka-subscriptions#readme",
+  "homepage": "https://github.com/ancashoria/graphql-kafka-subscriptions#readme",
   "jest": {
-    "roots": ["<rootDir>/src/test"],
-    "moduleFileExtensions": ["ts", "tsx", "js"],
+    "roots": [
+      "<rootDir>/src/test"
+    ],
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js"
+    ],
     "transform": {
       "\\.(ts|tsx)$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
     },
@@ -36,6 +46,7 @@
     "node-rdkafka": "^2.1.0"
   },
   "devDependencies": {
+    "@types/bunyan": "^1.8.4",
     "@types/jest": "^21.1.1",
     "@types/node": "^8.0.28",
     "jest": "^21.2.1",

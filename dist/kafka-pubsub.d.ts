@@ -1,3 +1,4 @@
+/// <reference types="bunyan" />
 /// <reference types="node" />
 import { PubSubEngine } from 'graphql-subscriptions';
 import * as Logger from 'bunyan';
