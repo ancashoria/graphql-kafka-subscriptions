@@ -81,9 +81,13 @@ export class KafkaPubSub implements PubSubEngine {
     }
   }
 
+  brokerList(){
+    return this.options.host.match(',') ? this.options.host : `${this.options.host}:${this.options.port}`
+  }
+
   private createProducer(topic: string) {
     const producer = Kafka.Producer.createWriteStream({
-      'metadata.broker.list': `${this.options.host}:${this.options.port}`
+      'metadata.broker.list': this.brokerList()
     }, {}, { topic })
     producer.on('error', (err) => {
       this.logger.error(err, 'Error in our kafka stream')
@@ -96,7 +100,7 @@ export class KafkaPubSub implements PubSubEngine {
     const groupId = this.options.groupId || Math.ceil(Math.random() * 9999)
     const consumer = Kafka.KafkaConsumer.createReadStream({
       'group.id': `kafka-group-${groupId}`,
-      'metadata.broker.list': `${this.options.host}:${this.options.port}`,
+      'metadata.broker.list': this.brokerList(),
     }, {}, {
       topics: [topic]
     })
