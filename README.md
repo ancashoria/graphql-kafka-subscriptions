@@ -18,6 +18,14 @@ export const pubsub = new KafkaPubSub({
 })
 ```
 
+With multiple Kafka nodes
+```javascript
+export const pubsub = new KafkaPubSub({
+  topic: 'anything',
+  host: 'kafka-10.development.foobar.com:9092,kafka-21.development.foobar.com:9092,kafka-22.development.foobar.com:9092',
+})
+```
+
 ```javascript
 // as mentioned in the comments of https://github.com/ancashoria/graphql-kafka-subscriptions/issues/4
 // you will need to upate the site calls of `publish` in your application as called out below.
