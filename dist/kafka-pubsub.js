@@ -56,10 +56,13 @@ var KafkaPubSub = (function () {
             listener(message);
         }
     };
+    KafkaPubSub.prototype.brokerList = function () {
+        return this.options.host.match(',') ? this.options.host : this.options.host + ":" + this.options.port;
+    };
     KafkaPubSub.prototype.createProducer = function (topic) {
         var _this = this;
         var producer = Kafka.Producer.createWriteStream({
-            'metadata.broker.list': this.options.host + ":" + this.options.port
+            'metadata.broker.list': this.brokerList()
         }, {}, { topic: topic });
         producer.on('error', function (err) {
             _this.logger.error(err, 'Error in our kafka stream');
@@ -71,7 +74,7 @@ var KafkaPubSub = (function () {
         var groupId = this.options.groupId || Math.ceil(Math.random() * 9999);
         var consumer = Kafka.KafkaConsumer.createReadStream({
             'group.id': "kafka-group-" + groupId,
-            'metadata.broker.list': this.options.host + ":" + this.options.port,
+            'metadata.broker.list': this.brokerList(),
         }, {}, {
             topics: [topic]
         });

@@ -33,6 +33,7 @@ export declare class KafkaPubSub implements PubSubEngine {
     unsubscribe(index: number): void;
     asyncIterator<T>(triggers: string | string[]): AsyncIterator<T>;
     private onMessage(channel, message);
+    brokerList(): any;
     private createProducer(topic);
     private createConsumer(topic);
 }
