@@ -10,6 +10,7 @@ export interface IKafkaOptions {
   port: string
   logger?: Logger,
   groupId?: any,
+  globalConfig?: object,
 }
 
 export interface IKafkaProducer {
@@ -86,9 +87,11 @@ export class KafkaPubSub implements PubSubEngine {
   }
 
   private createProducer(topic: string) {
-    const producer = Kafka.Producer.createWriteStream({
-      'metadata.broker.list': this.brokerList()
-    }, {}, { topic })
+    const producer = Kafka.Producer.createWriteStream(
+        Object.assign({}, {'metadata.broker.list': this.brokerList()}, this.options.globalConfig),
+        {},
+        {topic}
+    );
     producer.on('error', (err) => {
       this.logger.error(err, 'Error in our kafka stream')
     })
@@ -98,12 +101,18 @@ export class KafkaPubSub implements PubSubEngine {
   private createConsumer(topic: string) {
     // Create a group for each instance. The consumer will receive all messages from the topic
     const groupId = this.options.groupId || Math.ceil(Math.random() * 9999)
-    const consumer = Kafka.KafkaConsumer.createReadStream({
-      'group.id': `kafka-group-${groupId}`,
-      'metadata.broker.list': this.brokerList(),
-    }, {}, {
-      topics: [topic]
-    })
+    const consumer = Kafka.KafkaConsumer.createReadStream(
+        Object.assign(
+          {},
+          {
+            'group.id': `kafka-group-${groupId}`,
+            'metadata.broker.list': this.brokerList(),
+          },
+          this.options.globalConfig,
+        ),
+        {},
+        { topics: [topic] }
+    );
     consumer.on('data', (message) => {
       let parsedMessage = JSON.parse(message.value.toString())
 
