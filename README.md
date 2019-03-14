@@ -15,6 +15,7 @@ export const pubsub = new KafkaPubSub({
   topic: 'anything',
   host: 'INSERT_KAFKA_IP',
   port: 'INSERT_KAFKA_PORT',
+  globalConfig: {} // options passed directly to the consumer and producer
 })
 ```
 
