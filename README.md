@@ -7,6 +7,17 @@ One producer and one consumer for each node instance. Communication happens over
 ## Installation
 `npm install graphql-kafka-subscriptions`
 
+### Mac OS High Sierra / Mojave
+
+OpenSSL has been upgraded in High Sierra and homebrew does not overwrite default system libraries. That means when building node-rdkafka, because you are using openssl, you need to tell the linker where to find it:
+
+```sh
+export CPPFLAGS=-I/usr/local/opt/openssl/include
+export LDFLAGS=-L/usr/local/opt/openssl/lib
+```
+
+Then you can run `npm install` on your application to get it to build correctly.
+
 ## Usage
 ```javascript
 import { KafkaPubSub } from 'graphql-kafka-subscriptions'

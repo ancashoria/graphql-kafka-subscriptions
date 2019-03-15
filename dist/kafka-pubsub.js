@@ -61,9 +61,7 @@ var KafkaPubSub = (function () {
     };
     KafkaPubSub.prototype.createProducer = function (topic) {
         var _this = this;
-        var producer = Kafka.Producer.createWriteStream({
-            'metadata.broker.list': this.brokerList()
-        }, {}, { topic: topic });
+        var producer = Kafka.Producer.createWriteStream(Object.assign({}, { 'metadata.broker.list': this.brokerList() }, this.options.globalConfig), {}, { topic: topic });
         producer.on('error', function (err) {
             _this.logger.error(err, 'Error in our kafka stream');
         });
@@ -72,12 +70,10 @@ var KafkaPubSub = (function () {
     KafkaPubSub.prototype.createConsumer = function (topic) {
         var _this = this;
         var groupId = this.options.groupId || Math.ceil(Math.random() * 9999);
-        var consumer = Kafka.KafkaConsumer.createReadStream({
+        var consumer = Kafka.KafkaConsumer.createReadStream(Object.assign({}, {
             'group.id': "kafka-group-" + groupId,
             'metadata.broker.list': this.brokerList(),
-        }, {}, {
-            topics: [topic]
-        });
+        }, this.options.globalConfig), {}, { topics: [topic] });
         consumer.on('data', function (message) {
             var parsedMessage = JSON.parse(message.value.toString());
             if (parsedMessage.channel) {

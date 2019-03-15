@@ -8,6 +8,7 @@ export interface IKafkaOptions {
     port: string;
     logger?: Logger;
     groupId?: any;
+    globalConfig?: object;
 }
 export interface IKafkaProducer {
     write: (input: Buffer) => any;
