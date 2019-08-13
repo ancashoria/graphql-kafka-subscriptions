@@ -83,7 +83,7 @@ export class KafkaPubSub implements PubSubEngine {
   }
 
   brokerList(){
-    return this.options.host.match(',') ? this.options.host : `${this.options.host}:${this.options.port}`
+    return this.options.port ? `${this.options.host}:${this.options.port}` : this.options.host
   }
 
   private createProducer(topic: string) {
