@@ -45,12 +45,12 @@
     "bunyan": "1.8.12",
     "graphql-subscriptions": "^0.5.0",
     "iterall": "^1.1.1",
-    "node-rdkafka": "^2.5.1"
+    "node-rdkafka": "2.7.1-2"
   },
   "devDependencies": {
     "@types/jest": "^21.1.1",
-    "jest": "^21.2.1",
-    "ts-jest": "^21.0.1",
-    "typescript": "^2.5.2"
+    "jest": "^24.9.0",
+    "ts-jest": "^24.1.0",
+    "typescript": "3.5.1"
   }
 }

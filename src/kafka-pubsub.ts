@@ -87,7 +87,7 @@ export class KafkaPubSub implements PubSubEngine {
   }
 
   private createProducer(topic: string) {
-    const producer = Kafka.Producer.createWriteStream(
+    const producer = Kafka.createWriteStream(
         Object.assign({}, {'metadata.broker.list': this.brokerList()}, this.options.globalConfig),
         {},
         {topic}
@@ -101,7 +101,7 @@ export class KafkaPubSub implements PubSubEngine {
   private createConsumer(topic: string) {
     // Create a group for each instance. The consumer will receive all messages from the topic
     const groupId = this.options.groupId || Math.ceil(Math.random() * 9999)
-    const consumer = Kafka.KafkaConsumer.createReadStream(
+    const stream = Kafka.createReadStream(
         Object.assign(
           {},
           {
@@ -113,7 +113,7 @@ export class KafkaPubSub implements PubSubEngine {
         {},
         { topics: [topic] }
     );
-    consumer.on('data', (message) => {
+    stream.consumer.on('data', (message) => {
       let parsedMessage = JSON.parse(message.value.toString())
 
       // Using channel abstraction
@@ -126,6 +126,6 @@ export class KafkaPubSub implements PubSubEngine {
         this.onMessage(topic, parsedMessage)
       }
     })
-    return consumer
+    return stream
   }
 }
