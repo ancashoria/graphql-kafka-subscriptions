@@ -4,8 +4,10 @@ var __rest = (this && this.__rest) || function (s, e) {
     for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
         t[p] = s[p];
     if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) if (e.indexOf(p[i]) < 0)
-            t[p[i]] = s[p[i]];
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
     return t;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -57,11 +59,11 @@ var KafkaPubSub = (function () {
         }
     };
     KafkaPubSub.prototype.brokerList = function () {
-        return this.options.host.match(',') ? this.options.host : this.options.host + ":" + this.options.port;
+        return this.options.port ? this.options.host + ":" + this.options.port : this.options.host;
     };
     KafkaPubSub.prototype.createProducer = function (topic) {
         var _this = this;
-        var producer = Kafka.Producer.createWriteStream(Object.assign({}, { 'metadata.broker.list': this.brokerList() }, this.options.globalConfig), {}, { topic: topic });
+        var producer = Kafka.createWriteStream(Object.assign({}, { 'metadata.broker.list': this.brokerList() }, this.options.globalConfig), {}, { topic: topic });
         producer.on('error', function (err) {
             _this.logger.error(err, 'Error in our kafka stream');
         });
@@ -70,11 +72,11 @@ var KafkaPubSub = (function () {
     KafkaPubSub.prototype.createConsumer = function (topic) {
         var _this = this;
         var groupId = this.options.groupId || Math.ceil(Math.random() * 9999);
-        var consumer = Kafka.KafkaConsumer.createReadStream(Object.assign({}, {
+        var stream = Kafka.createReadStream(Object.assign({}, {
             'group.id': "kafka-group-" + groupId,
             'metadata.broker.list': this.brokerList(),
         }, this.options.globalConfig), {}, { topics: [topic] });
-        consumer.on('data', function (message) {
+        stream.consumer.on('data', function (message) {
             var parsedMessage = JSON.parse(message.value.toString());
             if (parsedMessage.channel) {
                 var channel = parsedMessage.channel, payload = __rest(parsedMessage, ["channel"]);
@@ -84,7 +86,7 @@ var KafkaPubSub = (function () {
                 _this.onMessage(topic, parsedMessage);
             }
         });
-        return consumer;
+        return stream;
     };
     return KafkaPubSub;
 }());

@@ -13,9 +13,9 @@ export declare class PubSubAsyncIterator<T> implements AsyncIterator<T> {
     private allSubscribed;
     private listening;
     private pubsub;
-    private pushValue(message);
-    private pullValue();
-    private emptyQueue(subscriptionIds);
-    private subscribeAll();
-    private unsubscribeAll(subscriptionIds);
+    private pushValue;
+    private pullValue;
+    private emptyQueue;
+    private subscribeAll;
+    private unsubscribeAll;
 }
