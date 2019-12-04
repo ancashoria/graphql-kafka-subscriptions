@@ -40,17 +40,17 @@
     "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(tsx?|jsx?)$"
   },
   "dependencies": {
-    "@types/bunyan": "^1.8.4",
-    "@types/node": "^9.3.0",
+    "@types/bunyan": "^1.8.6",
+    "@types/node": "^12.12.14",
     "bunyan": "1.8.12",
-    "graphql-subscriptions": "^0.5.0",
-    "iterall": "^1.1.1",
-    "node-rdkafka": "2.7.1-2"
+    "graphql-subscriptions": "^1.1.0",
+    "iterall": "^1.2.2",
+    "node-rdkafka": "^2.7.4"
   },
   "devDependencies": {
-    "@types/jest": "^21.1.1",
+    "@types/jest": "^24.0.23",
     "jest": "^24.9.0",
-    "ts-jest": "^24.1.0",
-    "typescript": "3.5.1"
+    "ts-jest": "^24.2.0",
+    "typescript": "^3.7.3"
   }
 }

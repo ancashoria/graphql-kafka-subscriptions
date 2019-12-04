@@ -10,6 +10,13 @@ var __rest = (this && this.__rest) || function (s, e) {
         }
     return t;
 };
+var __spreadArrays = (this && this.__spreadArrays) || function () {
+    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+    for (var r = Array(s), k = 0, i = 0; i < il; i++)
+        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+            r[k] = a[j];
+    return r;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 var Kafka = require("node-rdkafka");
 var Logger = require("bunyan");
@@ -35,7 +42,7 @@ var KafkaPubSub = (function () {
     KafkaPubSub.prototype.subscribe = function (channel, onMessage, options) {
         var index = Object.keys(this.subscriptionMap).length;
         this.subscriptionMap[index] = [channel, onMessage];
-        this.channelSubscriptions[channel] = (this.channelSubscriptions[channel] || []).concat([
+        this.channelSubscriptions[channel] = __spreadArrays((this.channelSubscriptions[channel] || []), [
             index
         ]);
         return Promise.resolve(index);
