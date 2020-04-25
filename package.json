@@ -1,13 +1,14 @@
 {
   "name": "graphql-kafka-subscriptions",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Apollo graphql subscription over Kafka protocol",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "scripts": {
-    "test": "jest --watchAll",
+    "test": "jest --env node",
     "build": "tsc",
-    "watch": "tsc -w"
+    "watch": "tsc -w",
+    "prepack": "tsc"
   },
   "repository": {
     "type": "git",
@@ -35,22 +36,25 @@
       "js"
     ],
     "transform": {
-      "\\.(ts|tsx)$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+      "\\.(ts|tsx)$": "ts-jest"
     },
     "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(tsx?|jsx?)$"
   },
   "dependencies": {
     "@types/bunyan": "^1.8.6",
-    "@types/node": "^12.12.14",
+    "@types/node": "^13.13.2",
     "bunyan": "1.8.12",
+    "dotenv": "^8.2.0",
+    "graphql": "^14.0.0",
     "graphql-subscriptions": "^1.1.0",
     "iterall": "^1.2.2",
-    "node-rdkafka": "^2.7.4"
+    "node-rdkafka": "^2.8.1",
+    "uuid": "^7.0.3"
   },
   "devDependencies": {
-    "@types/jest": "^24.0.23",
-    "jest": "^24.9.0",
-    "ts-jest": "^24.2.0",
-    "typescript": "^3.7.3"
+    "@types/jest": "^25.2.1",
+    "jest": "^25.4.0",
+    "ts-jest": "^25.4.0",
+    "typescript": "^3.8.3"
   }
 }
