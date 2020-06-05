@@ -15,7 +15,7 @@ beforeAll(() => {
       stream: process.stdout,
       level: 'info'
     }),
-    useHeaders: false,
+    useHeaders: true,
     globalConfig: {
       //'debug': 'all',
       'security.protocol': process.env.KAFKA_SECURITY || 'PLAINTEXT',

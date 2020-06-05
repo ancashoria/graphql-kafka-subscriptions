@@ -1,1 +1,0 @@
-{"version":3,"file":"child-logger.js","sourceRoot":"","sources":["../src/child-logger.ts"],"names":[],"mappings":";;AAEA,SAAgB,iBAAiB,CAAC,MAAc,EAAE,SAAiB;IACjE,OAAO,MAAM,CAAC,KAAK,CAAC;QAClB,KAAK,EAAE,cAAc;QACrB,OAAO,EAAE,SAAS;KACnB,EAAE,IAAI,CAAC,CAAA;AACV,CAAC;AALD,8CAKC"}
