@@ -113,7 +113,7 @@ export class KafkaPubSub implements PubSubEngine {
         {},
         { topics: [topic] }
     );
-    stream.consumer.on('data', (message) => {
+    stream.on('data', (message) => {
       let parsedMessage = JSON.parse(message.value.toString())
 
       // Using channel abstraction
