@@ -1,10 +1,9 @@
 # graphql-kafka-subscriptions
 
-**Apollo graphql subscriptions over Kafka protocol**
-
-One producer and one consumer for each node instance. Communication happens over a single kafka topic.
+It implements the PubSubEngine Interface from the graphql-subscriptions package and also the new AsyncIterator interface. It allows you to connect your subscriptions manager to a single Kafka topic used as Pub/Sub communication channel.
 
 ## Installation
+
 `npm install graphql-kafka-subscriptions`
 
 ### Mac OS High Sierra / Mojave
@@ -19,45 +18,58 @@ export LDFLAGS=-L/usr/local/opt/openssl/lib
 Then you can run `npm install` on your application to get it to build correctly.
 
 ## Usage
-```javascript
+
+
+### Initializing the kafka pubsub client
+
+```js
 import { KafkaPubSub } from 'graphql-kafka-subscriptions'
 
 export const pubsub = new KafkaPubSub({
-  topic: 'anything',
+  topic: 'name-of-the-topic',
   host: 'INSERT_KAFKA_IP',
   port: 'INSERT_KAFKA_PORT',
   globalConfig: {} // options passed directly to the consumer and producer
 })
 ```
 
-With multiple Kafka nodes
-```javascript
-export const pubsub = new KafkaPubSub({
-  topic: 'anything',
-  host: 'kafka-10.development.foobar.com:9092,kafka-21.development.foobar.com:9092,kafka-22.development.foobar.com:9092',
-})
+### Publishing messages to the subcrition
+
+```js
+payload = {
+  firstName: "John",
+  lastName: "Doe"
+}
+
+pubsub.publish('pubSubChannel', payload);
 ```
 
-```javascript
-// as mentioned in the comments of https://github.com/ancashoria/graphql-kafka-subscriptions/issues/4
-// you will need to upate the site calls of `publish` in your application as called out below.
+###  Subscribing to a channel
 
-// the stock PubSub::publish expects a string and an object
-      pubsub.publish('messageAdded', {
-        messageAdded: newMessage,
-        channelId: message.channelId
-      });
+```js
+const onMessage = (payload) => {
+  console.log(payload);
+}
 
-// KafkaPubSub::publish expects the first parameter to be inserted into the object
-      pubsub.publish({
-        channel: 'messageAdded',
-        messageAdded: newMessage,
-        channelId: message.channelId
-      });
+const subscription = await pubsub.subscribe('pubSubChannel', onMessage)
 ```
 
-Special thanks to:
-- [davidyaha](https://github.com/davidyaha) for [graphql-redis-subscriptions](https://github.com/davidyaha/graphql-redis-subscriptions) which was the main inspiration point for this project
-- [Apollo graphql community](http://dev.apollodata.com/community/)
+## Contributing
 
-Help greatly appreciated
+Contributions are welcome. Make sure to check the existing issues (including the closed ones) before requesting a feature, reporting a bug or opening a pull requests.
+
+For sending a PR follow:
+
+1. Fork it (<https://github.com/ancashoria/graphql-kafka-subscriptions/fork>)
+2. Create your feature branch (`git checkout -b my-new-feature`)
+3. Commit your changes (`git commit -am 'Add some feature'`)
+4. Push to the branch (`git push origin my-new-feature`)
+5. Create a new Pull Request
+
+
+**Horia Miron notes:**
+
+Thanks to [davidyaha][1] for [graphql-redis-subscriptions][2] which was the main inspiration point for this project.
+
+[1]: https://github.com/davidyaha
+[2]: https://github.com/davidyaha/graphql-redis-subscriptions
