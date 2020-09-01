@@ -12,7 +12,7 @@
   },
   "files": [
     "dist/"
-  ],  
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ancashoria/graphql-kafka-subscriptions.git"
@@ -51,13 +51,13 @@
     "graphql": "^14.0.0",
     "graphql-subscriptions": "^1.1.0",
     "iterall": "^1.2.2",
-    "node-rdkafka": "^2.8.1",
+    "kafkajs": "^1.12.0",
     "uuid": "^7.0.3"
   },
   "devDependencies": {
     "@types/jest": "^25.2.1",
     "jest": "^25.4.0",
     "ts-jest": "^25.4.0",
-    "typescript": "^3.8.3"    
+    "typescript": "^3.8.3"
   }
 }
