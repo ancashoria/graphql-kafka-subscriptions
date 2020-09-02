@@ -17,7 +17,6 @@ beforeAll(() => {
     }),
     useHeaders: false,
     globalConfig: {
-      //'debug': 'all',
       'security.protocol': process.env.KAFKA_SECURITY || 'PLAINTEXT',
     }
   })
@@ -29,28 +28,28 @@ afterAll(async () => {
 
 describe('KafkaPubSub Basic Tests', () => {
   test('should subscribe and publish messages correctly', async (done) => {
-        
+
     const inputChannel = 'test-subscribe'
     const inputPayload = {
       id: 'subscribe-value',
     }
-    
+
     function onMessage(payload) {
       try {
         expect(payload).toStrictEqual(inputPayload);
         done();
       } catch (error) {
         done(error);
-      }      
+      }
     }
-    
+
     const subscription = await pubsub.subscribe(inputChannel, onMessage)
     await new Promise(r => setTimeout(r, 5000));
     await pubsub.publish(inputChannel, inputPayload)
   })
 
   test('should subscribe correctly using asyncIterator', async () => {
-    
+
     const inputChannel = 'test-iterator'
     const iter = pubsub.asyncIterator(inputChannel)
 
@@ -61,7 +60,7 @@ describe('KafkaPubSub Basic Tests', () => {
 
     for (i = 0; i < rep; i++) {
       const inputPayload = { id: "iter-"+i }
-      const promise = iter.next()      
+      const promise = iter.next()
       await pubsub.publish(inputChannel, inputPayload)
       expect(await (await promise).value).toStrictEqual({ id: "iter-"+i })
     }

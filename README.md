@@ -54,6 +54,14 @@ const onMessage = (payload) => {
 const subscription = await pubsub.subscribe('pubSubChannel', onMessage)
 ```
 
+## Running the test
+
+This repository uses Docker and Docker Compose to run the tests. Please use the script *test.sh* to run the tests.
+
+```bash
+./test.sh
+```
+
 ## Contributing
 
 Contributions are welcome. Make sure to check the existing issues (including the closed ones) before requesting a feature, reporting a bug or opening a pull requests.

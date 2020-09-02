@@ -1,4 +1,4 @@
-import * as Kafka from 'node-rdkafka'
+import * as Kafka from 'kafkajs'
 import { PubSubEngine } from 'graphql-subscriptions'
 import * as Logger from 'bunyan';
 import { createChildLogger } from './child-logger';
@@ -14,7 +14,7 @@ export interface IKafkaOptions {
   globalConfig?: object,
   topicConfig?: object,
   useHeaders?: boolean,
-  keyFun?: (any) => Buffer 
+  keyFun?: (any) => Buffer
 }
 
 const defaultLogger = Logger.createLogger({
@@ -25,11 +25,12 @@ const defaultLogger = Logger.createLogger({
 
 export class KafkaPubSub extends PubSubEngine {
 
-  protected producer: Kafka.HighLevelProducer // ProducerStream not exported
-  protected consumer: Kafka.KafkaConsumer // ConsumerStream not exported 
+  protected kafka: Kafka.Kafka
+  protected producer: Kafka.Producer // ProducerStream not exported
+  protected consumer: Kafka.Consumer // ConsumerStream not exported
   protected options: any
-  
-  private ee: EventEmitter;
+
+  private eventEmitter: EventEmitter;
   private subscriptions: { [key: string]: [string, (...args: any[]) => void] }
   private subIdCounter: number;
 
@@ -39,213 +40,130 @@ export class KafkaPubSub extends PubSubEngine {
     super()
     this.options = options
     this.logger = createChildLogger(this.options.logger || defaultLogger, 'KafkaPubSub')
-    
-    this.ee = new EventEmitter();
+
+    this.eventEmitter = new EventEmitter();
     this.subscriptions = {};
     this.subIdCounter = 0;
+
+    this.kafka = new Kafka.Kafka(
+      Object.assign(this.options, { brokers: this.brokerList() })
+    )
   }
 
-  public async publish(channel: string, payload: any): Promise<void> {    
+  brokerList(){
+    return this.options.port ? [`${this.options.host}:${this.options.port}`] : this.options.host.split(',')
+  }
+
+  public async publish(channel: string, payload: any): Promise<void> {
     // only create producer if we actually publish something
     this.producer = this.producer || await this.createProducer()
-    
+
     let kafkaPayload = payload
+
     if (!this.options.useHeaders) {
       kafkaPayload = {
         channel: channel,
+        timestamp: Date.now(),
         payload: payload
       }
     }
 
     if (this.logger.debug) {
       this.logger.debug("Publish %s", JSON.stringify(kafkaPayload))
-    }    
+    }
 
-    return new Promise((resolve, reject) => {
-      this.producer.produce(
-        this.options.topic, 
-        null, 
-        this.serialiseMessage(kafkaPayload), 
-        this.options.keyFun ? this.options.keyFun(kafkaPayload) : null, 
-        Date.now(),
-        this.options.useHeaders ? [ {channel: Buffer.from(channel)} ] : null, 
-        (err) => {
-          if (err) {
-            reject(err)
-          } else {
-            resolve()
-          }
-        })
+    this.producer.send({
+      topic: this.options.topic,
+      messages: [
+        {
+          key: this.options.keyFun ? this.options.keyFun(kafkaPayload) : null,
+          headers: this.options.useHeaders ? { channel: Buffer.from(channel) } : {},
+          value: this.serialiseMessage(kafkaPayload)
+        }
+      ]
     })
   }
 
   public async subscribe(channel: string, onMessage: (...args: any[]) => void, options?: Object): Promise<number> {
     this.logger.info("Subscribing to %s", channel)
     this.consumer = this.consumer || await this.createConsumer(this.options.topic)
-    const internalMessage = (...args: any[]) => {
+    const wrapper = (...args: any[]) => {
       if (this.options.useHeaders) {
         onMessage(this.deserialiseMessage(args[0]))
       } else {
         onMessage(...args)
       }
     }
-    this.ee.addListener(channel, internalMessage)
+    this.eventEmitter.addListener(channel, wrapper)
     this.subIdCounter = this.subIdCounter + 1
-    this.subscriptions[this.subIdCounter] = [channel, internalMessage]
+    this.subscriptions[this.subIdCounter] = [channel, wrapper]
     return Promise.resolve(this.subIdCounter)
   }
 
-  public unsubscribe(index: number) {    
+  public unsubscribe(index: number) {
     const [channel, onMessage] = this.subscriptions[index];
     this.logger.info("Unsubscribing from %s", channel)
     delete this.subscriptions[index]
-    this.ee.removeListener(channel, onMessage);
+    this.eventEmitter.removeListener(channel, onMessage);
   }
 
   public async close(): Promise<void> {
-    let producerPromise: Promise<void>
-    producerPromise = new Promise((resolve, reject) => {
-      if (this.producer) {
-        this.producer.disconnect((err) => {
-          if (err) {
-            reject(err)
-          } else {
-            resolve()
-          }
-        })
+    if (this.producer) {
+      await this.producer.disconnect()
+    }
+
+    if (this.consumer) {
+      await this.consumer.disconnect()
+    }
+  }
+
+  private serialiseMessage(message: any): string {
+    return JSON.stringify(message)
+  }
+
+  private deserialiseMessage(message: string): any {
+    return JSON.parse(message)
+  }
+
+  private async createProducer(): Promise<Kafka.Producer> {
+    const producer = this.kafka.producer()
+    await producer.connect()
+    return producer
+  }
+
+  private async handleMessage(topic: string, _: number, message: Kafka.Message) {
+    if (this.options.useHeaders && message.headers) {
+      const channelHeader = message.headers['channel']
+      if (channelHeader) {
+        const channel = channelHeader.toString()
+        this.eventEmitter.emit(channel, message.value) // do not parse yet
+      } else {
+        this.logger.warn("Missing 'channel' header")
       }
-    })
-    let consumerPromise: Promise<void>
-    consumerPromise = new Promise((resolve, reject) => {
-      if (this.consumer) {
-        this.consumer.disconnect((err) => {
-          if (err) {
-            reject(err)
-          } else {
-            resolve()
-          }
-        })
+    } else {
+      const parsedMessage = this.deserialiseMessage(message.value.toString())
+      if (parsedMessage.channel) {
+        // Using channel abstraction
+        this.eventEmitter.emit(parsedMessage.channel, parsedMessage.payload)
+      } else {
+        // No channel abstraction, publish over the whole topic
+        this.eventEmitter.emit(topic, parsedMessage)
       }
-    })
-    return Promise.all([producerPromise, consumerPromise]).then()
+    }
   }
 
-  brokerList(){
-    return this.options.port ? `${this.options.host}:${this.options.port}` : this.options.host
-  }
-
-  private serialiseMessage(message: any): Buffer {
-    return Buffer.from(JSON.stringify(message))
-  }
-
-  private deserialiseMessage(message: Buffer): any {
-    return JSON.parse(message.toString())
-  }
-
-  private async createProducer(): Promise<Kafka.HighLevelProducer> {
-    const producer = new Kafka.HighLevelProducer(
-        Object.assign(
-          {}, 
-          {
-            'metadata.broker.list': this.brokerList(),            
-          }, 
-          this.options.globalConfig),
-        Object.assign(
-            {},
-            {},
-            this.options.topicConfig
-        )       
-    );
-    producer.on('event.error', (err) => {
-      this.logger.error(err)
-    })
-    return new Promise((resolve, reject) => {
-      producer.on('ready', (data, metadata) => {
-        let topics =  metadata.topics.map(topic => topic.name);
-        this.logger.info('Connected, found topics: %s', topics);
-        
-        if (topics.includes(this.options.topic)) {
-          resolve(producer);
-        } else {
-          this.logger.error('Could not find requested topic %s', this.options.topic);
-          producer.disconnect()
-          reject('Could not find requested topic %s')
-        }
-      })
-
-      this.logger.info("Connecting producer ...")
-      producer.connect();
-    })     
-  }
-
-  private async createConsumer(topic: string): Promise<Kafka.KafkaConsumer> {    
+  private async createConsumer(topic: string): Promise<Kafka.Consumer> {
     // Create a group for each instance. The consumer will receive all messages from the topic
     const groupId = this.options.groupId || uuidv4()
 
-    const consumer = new Kafka.KafkaConsumer(
-        Object.assign(
-          {},
-          {
-            'group.id': `kafka-pubsub-${groupId}`,
-            'metadata.broker.list': this.brokerList()
-          },
-          this.options.globalConfig,
-        ),
-        Object.assign(
-          {},
-          {"auto.offset.reset": "latest"},
-          this.options.topicConfig
-        ));
-
-    consumer.on('data', (message) => {
-      if (this.logger.debug) {
-        this.logger.debug("Received %s", message.value.toString())
-      }
-
-      if (this.options.useHeaders && message.headers) {
-        const channelHeader = message.headers.find((header: Kafka.MessageHeader) => { return "channel" in header})
-        if (channelHeader) {
-          const channel = channelHeader.channel.toString()
-          this.ee.emit(channel, message.value) // do not parse yet
-        } else {
-          this.logger.warn("Missing 'channel' header")
-        }
-      } else {
-        const parsedMessage = this.deserialiseMessage(message.value)
-        if (parsedMessage.channel) {
-          // Using channel abstraction
-          this.ee.emit(parsedMessage.channel, parsedMessage.payload)      
-        } else {
-          // No channel abstraction, publish over the whole topic
-          this.ee.emit(topic, parsedMessage)
-        }
-      }
-
+    const consumer = this.kafka.consumer({ groupId })
+    await consumer.connect()
+    await consumer.subscribe({ topic: this.options.topic })
+    await consumer.run({
+      eachMessage: async ({ topic, partition, message }) => {
+        this.handleMessage(topic, partition, message)
+      },
     })
-    
-    consumer.on('event.log', (event) => {
-      this.logger.debug(event);
-    });
-
-    return new Promise((resolve, reject) => {
-      consumer.on('ready', (data, metadata) => {
-        let topics =  metadata.topics.map(topic => topic.name);
-        this.logger.info('Connected, found topics: %s', topics);
-        
-        if (topics.includes(topic)) {
-          this.logger.info("Subscribing to %s", topic)
-          consumer.subscribe([topic]);
-          consumer.consume();
-          resolve(consumer);
-        } else {
-          this.logger.error('Could not find requested topic %s', topic);
-          consumer.disconnect()
-          reject('Could not find requested topic %s')
-        }
-      })
-
-      this.logger.info("Connecting consumer ...")
-      consumer.connect();    
-    })
+    return consumer
   }
 }
