@@ -8,7 +8,7 @@
     "test": "jest --env node",
     "build": "tsc",
     "watch": "tsc -w",
-    "prepack": "tsc"
+    "prepare": "tsc"
   },
   "files": [
     "dist/"
