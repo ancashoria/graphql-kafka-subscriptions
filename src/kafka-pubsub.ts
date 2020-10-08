@@ -164,13 +164,7 @@ export class KafkaPubSub extends PubSubEngine {
         let topics =  metadata.topics.map(topic => topic.name);
         this.logger.info('Connected, found topics: %s', topics);
         
-        if (topics.includes(this.options.topic)) {
-          resolve(producer);
-        } else {
-          this.logger.error('Could not find requested topic %s', this.options.topic);
-          producer.disconnect()
-          reject('Could not find requested topic %s')
-        }
+        resolve(producer);
       })
 
       this.logger.info("Connecting producer ...")
@@ -232,16 +226,10 @@ export class KafkaPubSub extends PubSubEngine {
         let topics =  metadata.topics.map(topic => topic.name);
         this.logger.info('Connected, found topics: %s', topics);
         
-        if (topics.includes(topic)) {
-          this.logger.info("Subscribing to %s", topic)
+        this.logger.info("Subscribing to %s", topic)
           consumer.subscribe([topic]);
           consumer.consume();
           resolve(consumer);
-        } else {
-          this.logger.error('Could not find requested topic %s', topic);
-          consumer.disconnect()
-          reject('Could not find requested topic %s')
-        }
       })
 
       this.logger.info("Connecting consumer ...")
