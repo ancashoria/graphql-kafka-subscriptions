@@ -169,7 +169,7 @@ export class KafkaPubSub extends PubSubEngine {
         } else {
           this.logger.error('Could not find requested topic %s', this.options.topic);
           producer.disconnect()
-          reject('Could not find requested topic %s')
+          reject('Could not find requested topic ' + this.options.topic)
         }
       })
 
