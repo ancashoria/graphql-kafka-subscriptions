@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "scripts": {
+    "prepare": "tsc",
     "test": "jest --env node",
     "build": "tsc",
     "watch": "tsc -w",
@@ -12,7 +13,7 @@
   },
   "files": [
     "dist/"
-  ],  
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ancashoria/graphql-kafka-subscriptions.git"
@@ -58,6 +59,6 @@
     "@types/jest": "^25.2.1",
     "jest": "^25.4.0",
     "ts-jest": "^25.4.0",
-    "typescript": "^3.8.3"    
+    "typescript": "^3.8.3"
   }
 }
